@@ -32,15 +32,18 @@ resource "google_compute_firewall" "default" {
     ports    = ["80", "8080", "1000-2000", "22"]
   }
 
-  source_tags = ["web"]
+  source_tags = var.compute_source_tags
 }
 
 ### COMPUTE
 ## NGINX PROXY
 resource "google_compute_instance" "nginx_instance" {
   name         = "nginx-proxy"
-  machine_type = "f1-micro"
-  tags = ["web"]
+  machine_type = var.environment_machine_type[var.target_environment]
+  tags = var.compute_source_tags
+  labels = {
+    environment = var.environment_map[var.target_environment]
+  }
   
   boot_disk {
     initialize_params {
