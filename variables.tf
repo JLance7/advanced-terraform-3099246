@@ -18,11 +18,13 @@ variable "zone" {
 variable "dbusername" {
   type = string
   sensitive = true
+  default = "user"
 }
 
 variable "dbpassword" {
   type = string
   sensitive = true
+  default = "pass"
 }
 
 variable "subnet-name" {
