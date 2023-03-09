@@ -1,6 +1,6 @@
 ### PROVIDER
 provider "google" {
-  project = var.project-id  #replace this with your project-id
+  project = var.project-id
   region  = var.region
   zone    = var.zone
 }
@@ -16,7 +16,7 @@ resource "google_compute_subnetwork" "subnet-1" {
   ip_cidr_range            = var.subnet-cidr
   network                  = data.google_compute_network.default.self_link
   region                   = var.region
-  private_ip_google_access = var.private_ip_google_access
+  private_ip_google_access = var.private_google_access
 }
 
 resource "google_compute_firewall" "default" {
@@ -29,10 +29,10 @@ resource "google_compute_firewall" "default" {
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "8080", "1000-2000", "22"]
+    ports    = var.firewall-ports
   }
 
-  source_tags = var.compute_source_tags
+  source_tags = var.compute-source-tags
 }
 
 ### COMPUTE
@@ -40,10 +40,10 @@ resource "google_compute_firewall" "default" {
 resource "google_compute_instance" "nginx_instance" {
   name         = "nginx-proxy"
   machine_type = var.environment_machine_type[var.target_environment]
-  tags = var.compute_source_tags
   labels = {
     environment = var.environment_map[var.target_environment]
   }
+  tags = var.compute-source-tags
   
   boot_disk {
     initialize_params {
@@ -55,15 +55,19 @@ resource "google_compute_instance" "nginx_instance" {
     network = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
     access_config {
-      
+  
     }
   }
 }
 
-## WEB1
-resource "google_compute_instance" "web1" {
-  name         = "web1"
-  machine_type = "f1-micro"
+## WEB-instances
+resource "google_compute_instance" "web-instances" {
+  count = 3
+  name         = "web${count.index}"
+  machine_type = var.environment_machine_type[var.target_environment]
+  labels = {
+    environment = var.environment_map[var.target_environment]
+  }
   
   boot_disk {
     initialize_params {
@@ -77,43 +81,73 @@ resource "google_compute_instance" "web1" {
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }
 }
-## WEB2
-resource "google_compute_instance" "web2" {
-  name         = "web2"
-  machine_type = "f1-micro"
-  
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
 
-  network_interface {
-    network = data.google_compute_network.default.self_link
-    subnetwork = google_compute_subnetwork.subnet-1.self_link
-  }
-}
-## WEB3
-resource "google_compute_instance" "web3" {
-  name         = "web3"
-  machine_type = "f1-micro"
+# ## WEB1
+# resource "google_compute_instance" "web1" {
+#   name         = "web1"
+#   machine_type = var.environment_machine_type[var.target_environment]
+#   labels = {
+#     environment = var.environment_map[var.target_environment]
+#   }
   
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
+#   boot_disk {
+#     initialize_params {
+#       image = "debian-cloud/debian-11"
+#     }
+#   }
 
-  network_interface {
-    network = data.google_compute_network.default.self_link
-    subnetwork = google_compute_subnetwork.subnet-1.self_link
-  }  
-}
+#   network_interface {
+#     # A default network is created for all GCP projects
+#     network = data.google_compute_network.default.self_link
+#     subnetwork = google_compute_subnetwork.subnet-1.self_link
+#   }
+# }
+# ## WEB2
+# resource "google_compute_instance" "web2" {
+#   name         = "web2"
+#   machine_type = var.environment_machine_type[var.target_environment]
+#   labels = {
+#     environment = var.environment_map[var.target_environment]
+#   }
+  
+#   boot_disk {
+#     initialize_params {
+#       image = "debian-cloud/debian-11"
+#     }
+#   }
+
+#   network_interface {
+#     network = data.google_compute_network.default.self_link
+#     subnetwork = google_compute_subnetwork.subnet-1.self_link
+#   }
+# }
+# ## WEB3
+# resource "google_compute_instance" "web3" {
+#   name         = "web3"
+#   machine_type = var.environment_machine_type[var.target_environment]
+#   labels = {
+#     environment = var.environment_map[var.target_environment]
+#   }
+  
+#   boot_disk {
+#     initialize_params {
+#       image = "debian-cloud/debian-11"
+#     }
+#   }
+
+#   network_interface {
+#     network = data.google_compute_network.default.self_link
+#     subnetwork = google_compute_subnetwork.subnet-1.self_link
+#   }  
+# }
 
 ## DB
 resource "google_compute_instance" "mysqldb" {
   name         = "mysqldb"
-  machine_type = "f1-micro"
+  machine_type = var.environment_machine_type[var.target_environment]
+  labels = {
+    environment = var.environment_map[var.target_environment]
+  }
   
   boot_disk {
     initialize_params {
@@ -126,3 +160,26 @@ resource "google_compute_instance" "mysqldb" {
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }  
 }
+
+resource "random_id" "db_name_suffix" {
+  byte_length = 4
+}
+
+# ## CLOUD SQL
+# resource "google_sql_database_instance" "cloudsql" {
+#   name             = "web-app-db-${random_id.db_name_suffix.hex}"
+#   database_version = "MYSQL_8_0"
+#   region           = "us-central1"
+
+#   settings {
+#     tier = "db-f1-micro"
+#   }
+#   deletion_protection = false
+# }
+
+# ## CLOUD SQL USER
+# resource "google_sql_user" "users" {
+#   name     = "db-user"
+#   instance = google_sql_database_instance.cloudsql.name
+#   password = "notsecurepassword"
+# }

@@ -1,5 +1,8 @@
+
+### VARIABLES
 variable "project-id" {
   type = string
+  default = "advanced-terraform-380000"
 }
 
 variable "region" {
@@ -9,7 +12,17 @@ variable "region" {
 
 variable "zone" {
   type = string
-  default = "use-central1-a"
+  default = "us-central1-a"
+}
+
+variable "dbusername" {
+  type = string
+  sensitive = true
+}
+
+variable "dbpassword" {
+  type = string
+  sensitive = true
 }
 
 variable "subnet-name" {
@@ -22,7 +35,7 @@ variable "subnet-cidr" {
   default = "10.127.0.0/20"
 }
 
-variable "private_ip_google_access" {
+variable "private_google_access" {
   type = bool
   default = true
 }
@@ -32,9 +45,9 @@ variable "firewall-ports" {
   default = ["80", "8080", "1000-2000", "22"]
 }
 
-variable "compute_source_tags" {
-  type = list
-  default = ["web"]
+variable "compute-source-tags" {
+    type = list
+    default = ["web"]
 }
 
 variable "target_environment" {
@@ -43,7 +56,7 @@ variable "target_environment" {
 
 variable "environment_list" {
   type = list(string)
-  default = ["DEV", "QA", "STAGE", "PROD"]
+  default = ["DEV","QA","STAGE","PROD"]
 }
 
 variable "environment_map" {
@@ -60,30 +73,38 @@ variable "environment_machine_type" {
   type = map(string)
   default = {
     "DEV" = "f1-micro",
-    "QA" = "f1-micro",
-    "STAGE" = "f1-micro",
-    "PROD" = "f1-micro"
+    "QA" = "e2-micro",
+    "STAGE" = "e2-micro",
+    "PROD" = "e2-medium"
   }
 }
 
 variable "environment_instance_settings" {
-  type = map(object({machine_type=string, tags=list(string)}))
+  type = map(object({machine_type=string, labels=map(string)}))
   default = {
     "DEV" = {
       machine_type = "f1-micro"
-      tags = ["dev"]
+      labels = {
+        environment = "dev"
+      }
     },
-    "QA" = {
-      machine_type = "f1-micro"
-      tags = ["qa"]
+   "QA" = {
+      machine_type = "e2-micro"
+      labels = {
+        environment = "qa"
+      }
     },
     "STAGE" = {
-      machine_type = "f1-micro"
-      tags = ["stage"]
+      machine_type = "e2-micro"
+      labels = {
+        environment = "stage"
+      }
     },
     "PROD" = {
-      machine_type = "f1-micro"
-      tags = ["prod"]
-    },
+      machine_type = "e2-medium"
+      labels = {
+        environment = "prod"
+      }
+    }
   }
 }
