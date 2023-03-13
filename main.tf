@@ -5,6 +5,12 @@ provider "google" {
   zone    = var.zone
 }
 
+terraform {
+  backend "gcs" {
+    bucket = "remotestate_advanced-terraform-380000"
+  }
+}
+
 ### COMPUTE
 ## NGINX PROXY
 resource "google_compute_instance" "nginx_instance" {
