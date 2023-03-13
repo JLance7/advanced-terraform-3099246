@@ -22,6 +22,6 @@ output "nginx-public-ip" {
 #   value = google_comput_instance.mysqldb.network_interface[0].network_ip
 # }
 
-output "webserver-ips" {
-  value = google_compute_instance.web-instances[*].network_interface[0].network_ip
-}
+# output "webserver-ips" {
+#   value = google_compute_instance.web-instances[*].network_interface[0].network_ip
+# }
